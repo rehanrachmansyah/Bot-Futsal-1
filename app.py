@@ -42,44 +42,50 @@ def home():
 # Endpoint webhook dari Ultramsg
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    payload = request.json
-    print("DATA MASUK:", payload)
+    try:
+        payload = request.json
+        print("DATA MASUK:", payload)
 
-    data = payload.get('data', {})
-    msg = data.get('body', '').lower()
-    sender = data.get('from', '')
+        data = payload.get('data', {})
+        msg = data.get('body', '').lower()
+        sender = data.get('from', '')
 
-    if not msg or not sender:
-        return jsonify({"error": "Missing message or sender"}), 400
+        if not msg or not sender:
+            return jsonify({"error": "Missing message or sender"}), 400
 
-    jadwal = load_jadwal()
-    response = ""
+        jadwal = load_jadwal()
+        response = ""
 
-    if "jadwal" in msg:
-        response = "📅 Jadwal tersedia:\n"
-        for jam, nama in jadwal.items():
-            status = "✅ Tersedia" if not nama else f"❌ Sudah dibooking oleh {nama}"
-            response += f"- {jam}: {status}\n"
+        if "jadwal" in msg:
+            response = "📅 Jadwal tersedia:\n"
+            for jam, nama in jadwal.items():
+                status = "✅ Tersedia" if not nama else f"❌ Sudah dibooking oleh {nama}"
+                response += f"- {jam}: {status}\n"
 
-    elif "book" in msg:
-        for jam in jadwal:
-            if jam in msg and not jadwal[jam]:
-                nama_tim = msg.split("atas nama")[-1].strip().title()
-                jadwal[jam] = nama_tim
-                save_jadwal(jadwal)
-                response = f"✅ Booking berhasil untuk jam {jam} atas nama {nama_tim}!"
-                break
+        elif "book" in msg:
+            for jam in jadwal:
+                if jam in msg and not jadwal[jam]:
+                    nama_tim = msg.split("atas nama")[-1].strip().title()
+                    jadwal[jam] = nama_tim
+                    save_jadwal(jadwal)
+                    response = f"✅ Booking berhasil untuk jam {jam} atas nama {nama_tim}!"
+                    break
+            else:
+                response = "❌ Jam tersebut tidak tersedia atau sudah dibooking."
+
         else:
-            response = "❌ Jam tersebut tidak tersedia atau sudah dibooking."
+            response = (
+                "⚽ Halo! Ketik *jadwal* untuk melihat jadwal lapangan,\n"
+                "atau ketik *book 18.00 atas nama Tim Kamu* untuk booking."
+            )
 
-    else:
-        response = (
-            "⚽ Halo! Ketik *jadwal* untuk melihat jadwal lapangan,\n"
-            "atau ketik *book 18.00 atas nama Tim Kamu* untuk booking."
-        )
+        send_message(sender, response)
+        return jsonify({"status": "ok"})
+    
+    except Exception as e:
+        print("ERROR WEBHOOK:", str(e))
+        return jsonify({"error": str(e)}), 500
 
-    send_message(sender, response)
-    return jsonify({"status": "ok"})
 
 # Kirim balasan ke WA
 def send_message(to, message):
@@ -96,3 +102,4 @@ def send_message(to, message):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
