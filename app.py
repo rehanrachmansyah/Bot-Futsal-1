@@ -1,46 +1,31 @@
-print("🚀 Memulai aplikasi... import selesai.")
-try:
-    from flask import Flask, request, jsonify
-    import requests
-    import json
-    import os
-    print("✅ Modul berhasil diimport.")
-except Exception as e:
-    print("❌ Gagal import modul:", e)
-
 from flask import Flask, request, jsonify
 import requests
 import json
 import os
 
+print("🚀 Memulai aplikasi... import selesai.")
+
 app = Flask(__name__)
 
-INSTANCE_ID = 'instance137646'  # Ganti dengan milikmu
-TOKEN = 'jmitcigiqnheius8'      # Ganti dengan milikmu
-
-JADWAL_FILE = '/tmp/jadwal.json'
+INSTANCE_ID = 'instance137646'
+TOKEN = 'jmitcigiqnheius8'
 
 def load_jadwal():
     try:
-        with open(JADWAL_FILE, 'r') as f:
+        with open('jadwal.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        return {
-            "18.00": "",
-            "19.00": "",
-            "20.00": ""
-        }
+        return {}
 
 def save_jadwal(jadwal):
-    with open(JADWAL_FILE, 'w') as f:
+    with open('jadwal.json', 'w') as f:
         json.dump(jadwal, f, indent=4)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        print("📥 Menerima webhook request...")
         payload = request.json
-        print("DATA MASUK:", payload)
+        print("📥 Data masuk:", payload)
 
         data = payload.get('data', {})
         msg = data.get('body', '').lower()
@@ -68,7 +53,6 @@ def webhook():
                     break
             else:
                 response = "❌ Jam tersebut tidak tersedia atau sudah dibooking."
-
         else:
             response = (
                 "⚽ Halo! Ketik *jadwal* untuk melihat jadwal lapangan,\n"
@@ -79,23 +63,21 @@ def webhook():
         return jsonify({"status": "ok"})
 
     except Exception as e:
-        print("ERROR WEBHOOK:", str(e))
+        print("❌ Error saat webhook:", e)
         return jsonify({"error": str(e)}), 500
 
 def send_message(to, message):
     url = f"https://api.ultramsg.com/{INSTANCE_ID}/messages/chat?token={TOKEN}"
     headers = {"Content-Type": "application/json"}
-    payload = {
-        "to": to,
-        "body": message
-    }
+    payload = {"to": to, "body": message}
     response = requests.post(url, json=payload, headers=headers)
-    print("RESPON ULTRAMSG:", response.text)
+    print("📤 Response Ultramsg:", response.text)
 
 if __name__ == '__main__':
-    print("✅ Aplikasi Flask berhasil dijalankan...")
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
-
-
-
+    try:
+        print("✅ Modul berhasil diimport.")
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host='0.0.0.0', port=port)
+        print(f"✅ Flask berjalan di port {port}")
+    except Exception as e:
+        print("❌ Error saat menjalankan app:", e)
