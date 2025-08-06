@@ -1,3 +1,13 @@
+print("🚀 Memulai aplikasi... import selesai.")
+try:
+    from flask import Flask, request, jsonify
+    import requests
+    import json
+    import os
+    print("✅ Modul berhasil diimport.")
+except Exception as e:
+    print("❌ Gagal import modul:", e)
+
 from flask import Flask, request, jsonify
 import requests
 import json
@@ -28,6 +38,7 @@ def save_jadwal(jadwal):
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
+        print("📥 Menerima webhook request...")
         payload = request.json
         print("DATA MASUK:", payload)
 
@@ -85,5 +96,6 @@ if __name__ == '__main__':
     print("✅ Aplikasi Flask berhasil dijalankan...")
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
