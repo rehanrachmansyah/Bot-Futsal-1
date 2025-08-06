@@ -61,14 +61,16 @@ def webhook():
 
 
 def send_message(to, message):
-    url = f"https://api.ultramsg.com/{INSTANCE_ID}/messages/chat"
+    url = f"https://api.ultramsg.com/{INSTANCE_ID}/messages/chat?token={TOKEN}"
     headers = {"Content-Type": "application/json"}
     payload = {
         "to": to,
         "body": message
     }
-    requests.post(url, json=payload, headers=headers, params={"token": TOKEN})
+    response = requests.post(url, json=payload, headers=headers)
+    print("RESPON ULTRAMSG:", response.text)
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
