@@ -9,17 +9,24 @@ app = Flask(__name__)
 INSTANCE_ID = 'instance137646'
 TOKEN = 'jmitcigiqnheius8'
 
-# Load jadwal dari file JSON
-def load_jadwal():
-    try:
-        with open('jadwal.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+# Path file jadwal disimpan di folder /tmp (writable di Railway)
+JADWAL_PATH = os.path.join("/tmp", "jadwal.json")
 
-# Simpan jadwal ke file
+# Load jadwal dari file JSON di /tmp
+def load_jadwal():
+    if not os.path.exists(JADWAL_PATH):
+        return {
+            "16.00": "",
+            "17.00": "",
+            "18.00": "",
+            "19.00": ""
+        }
+    with open(JADWAL_PATH, 'r') as f:
+        return json.load(f)
+
+# Simpan jadwal ke file di /tmp
 def save_jadwal(jadwal):
-    with open('jadwal.json', 'w') as f:
+    with open(JADWAL_PATH, 'w') as f:
         json.dump(jadwal, f, indent=4)
 
 # Endpoint webhook dari Ultramsg
@@ -75,7 +82,7 @@ def send_message(to, message):
     response = requests.post(url, json=payload, headers=headers)
     print("RESPON ULTRAMSG:", response.text)
 
-# Untuk deployment di Railway
+# Jalankan di Railway dengan port dinamis
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
