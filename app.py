@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 INSTANCE_ID = 'instance137646'  # ganti dengan milikmu
-TOKEN = 'ybvxzvsqaxp1ekdk'          # ganti dengan milikmu
+TOKEN = 'jmitcigiqnheius8'          # ganti dengan milikmu
 
 # Load data jadwal
 def load_jadwal():
@@ -71,3 +71,4 @@ def send_message(to, message):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
