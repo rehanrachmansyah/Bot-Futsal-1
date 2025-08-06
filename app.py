@@ -9,25 +9,35 @@ app = Flask(__name__)
 INSTANCE_ID = 'instance137646'
 TOKEN = 'jmitcigiqnheius8'
 
-# Path file jadwal disimpan di folder /tmp (writable di Railway)
-JADWAL_PATH = os.path.join("/tmp", "jadwal.json")
+# File lokasi di Railway (file storage terbatas)
+JADWAL_PATH = '/tmp/jadwal.json'
 
-# Load jadwal dari file JSON di /tmp
+# Load data jadwal dari file
 def load_jadwal():
-    if not os.path.exists(JADWAL_PATH):
-        return {
-            "16.00": "",
-            "17.00": "",
-            "18.00": "",
-            "19.00": ""
-        }
-    with open(JADWAL_PATH, 'r') as f:
-        return json.load(f)
+    try:
+        if not os.path.exists(JADWAL_PATH):
+            with open(JADWAL_PATH, 'w') as f:
+                json.dump({
+                    "18.00": "", "19.00": "", "20.00": ""
+                }, f)
+        with open(JADWAL_PATH, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print("Error load_jadwal:", e)
+        return {}
 
-# Simpan jadwal ke file di /tmp
+# Simpan jadwal ke file
 def save_jadwal(jadwal):
-    with open(JADWAL_PATH, 'w') as f:
-        json.dump(jadwal, f, indent=4)
+    try:
+        with open(JADWAL_PATH, 'w') as f:
+            json.dump(jadwal, f, indent=4)
+    except Exception as e:
+        print("Error save_jadwal:", e)
+
+# Untuk root endpoint biar nggak error 502
+@app.route("/", methods=['GET'])
+def home():
+    return "Bot Futsal Aktif ✅"
 
 # Endpoint webhook dari Ultramsg
 @app.route('/webhook', methods=['POST'])
@@ -71,18 +81,18 @@ def webhook():
     send_message(sender, response)
     return jsonify({"status": "ok"})
 
-# Fungsi untuk mengirim pesan balik ke WhatsApp
+# Kirim balasan ke WA
 def send_message(to, message):
     url = f"https://api.ultramsg.com/{INSTANCE_ID}/messages/chat?token={TOKEN}"
     headers = {"Content-Type": "application/json"}
-    payload = {
-        "to": to,
-        "body": message
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    print("RESPON ULTRAMSG:", response.text)
+    payload = {"to": to, "body": message}
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        print("ULTRAMSG:", response.text)
+    except Exception as e:
+        print("Send message failed:", e)
 
-# Jalankan di Railway dengan port dinamis
+# Jalankan di Railway
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
